@@ -27,3 +27,9 @@ models/round_1.weights.h5.npy
 .vscode-server/
 .windsurf-server/
 .keras/
+
+.cursor-server
+.vscode-server
+.windsurf-server
+.viminfo
+.lesshst
