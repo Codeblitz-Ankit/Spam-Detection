@@ -2,54 +2,66 @@
 
 ## Overview
 
-A privacy-preserving spam detection system built using Federated Learning, TensorFlow Lite, FastAPI, and Android.
+A privacy-focused spam detection system built using TensorFlow Lite, FastAPI, Android, and a real-time monitoring dashboard.
 
-Instead of sending user SMS messages to a central server, Android clients train locally and upload only model weight updates. The server aggregates updates using Federated Averaging (FedAvg) to improve the global model while preserving user privacy.
-
-### Key Features
-
-* Federated Learning (FedAvg)
-* Android-based local training
-* TensorFlow Lite deployment
-* FastAPI aggregation server
-* Real-time monitoring dashboard
-* Spam/Ham binary classification
-* Privacy-preserving architecture
+The project demonstrates how mobile devices can participate in a collaborative spam detection workflow while minimizing the transfer of sensitive SMS data. Android clients perform local inference using a TensorFlow Lite model and communicate with a centralized FastAPI server that manages model updates, evaluation, and deployment.
 
 ---
 
-## Architecture
+## Features
+
+* Android SMS Spam Detection Client
+* TensorFlow Lite On-Device Inference
+* FastAPI Backend Server
+* Real-Time Monitoring Dashboard
+* Model Versioning and Round Tracking
+* Accuracy Monitoring
+* Azure VM Deployment
+* Privacy-Oriented Architecture
+
+---
+
+## System Architecture
 
 ```text
-Android Clients
-       │
-       │ Local Training
-       ▼
-Weight Updates Only
-       │
-       ▼
-FastAPI Aggregation Server
-       │
-       │ FedAvg
-       ▼
-Updated Global Model
-       │
-       ▼
+Android Client
+      │
+      │ Prediction / Training Data
+      ▼
+FastAPI Server
+      │
+      ├── Model Management
+      ├── Accuracy Evaluation
+      ├── Round Tracking
+      └── Model Export
+      │
+      ▼
 TensorFlow Lite Model
-       │
-       ▼
+      │
+      ▼
 Redistributed To Clients
+
+      ▲
+      │
+Streamlit Dashboard
+(Real-Time Monitoring)
 ```
 
 ---
 
-## Project Structure
+## Repository Structure
 
 ```text
 Spam-Detection/
 │
-├── train.py
-├── build_trainable_model.py
+├── android/
+│   └── SpamDetector/
+│
+├── dashboard/
+│   └── dashboard.py
+│
+├── server/
+│   └── main.py
 │
 ├── data/
 │   └── SMSSpamCollection
@@ -57,14 +69,14 @@ Spam-Detection/
 ├── models/
 │   ├── round_0.tflite
 │   ├── round_0.weights.h5
-│   ├── vocab.json
 │   ├── accuracy.json
-│   └── current_round.json
+│   ├── current_round.json
+│   └── vocab.json
 │
-├── server/
-│   └── main.py
-│
-└── checkpoints/
+├── build_trainable_model.py
+├── train.py
+├── requirements.txt
+└── README.md
 ```
 
 ---
@@ -85,15 +97,15 @@ Classes:
 ## Model Architecture
 
 ```text
-Embedding Layer
-       ↓
+Embedding
+      ↓
 GlobalAveragePooling1D
-       ↓
-Dense (24 ReLU)
-       ↓
-Dropout (0.2)
-       ↓
-Dense (1 Sigmoid)
+      ↓
+Dense (ReLU)
+      ↓
+Dropout
+      ↓
+Dense (Sigmoid)
 ```
 
 ---
@@ -103,267 +115,166 @@ Dense (1 Sigmoid)
 | Parameter           | Value |
 | ------------------- | ----- |
 | Vocabulary Size     | 8000  |
-| Max Sequence Length | 100   |
+| Sequence Length     | 100   |
 | Embedding Dimension | 32    |
 | Batch Size          | 32    |
 | Epochs              | 10    |
-| Random Seed         | 42    |
 
 ---
 
-## Performance
+## Android Client
 
-| Metric    | Value  |
-| --------- | ------ |
-| Accuracy  | ~98.8% |
-| Precision | ~97.0% |
-| Recall    | ~94.8% |
-| F1 Score  | ~95.9% |
+The Android application performs on-device spam detection using TensorFlow Lite.
+
+### Included Assets
+
+```text
+round_0.tflite
+vocab.json
+```
+
+### Technologies
+
+* Kotlin
+* TensorFlow Lite
+* Android SDK
+* Material Components
 
 ---
 
-# Local Setup
+## Backend Server
 
-## Clone Repository
+The backend is implemented using FastAPI.
+
+### Main Responsibilities
+
+* Serve latest TensorFlow Lite model
+* Accept client uploads
+* Track training rounds
+* Evaluate model accuracy
+* Export updated models
+* Provide dashboard metrics
+
+### Endpoints
+
+```http
+GET  /get_model
+POST /upload_weights
+GET  /metrics
+WS   /ws/dashboard
+```
+
+---
+
+## Dashboard
+
+The Streamlit dashboard provides:
+
+* Current training round
+* Accuracy tracking
+* Upload statistics
+* Client activity monitoring
+* Real-time server events
+
+### Start Dashboard
+
+```bash
+streamlit run dashboard/dashboard.py --server.port 8501
+```
+
+---
+
+## Local Setup
+
+### Clone Repository
 
 ```bash
 git clone https://github.com/Codeblitz-Ankit/Spam-Detection.git
 cd Spam-Detection
 ```
 
-## Create Virtual Environment
-
-```bash
-python -m venv venv
-source venv/bin/activate
-```
-
-Windows:
-
-```bash
-venv\Scripts\activate
-```
-
-## Install Dependencies
+### Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
----
-
-# Training The Model
-
-Run:
+### Train Initial Model
 
 ```bash
 python train.py
 ```
 
-Generated files:
-
-```text
-models/
-├── round_0.tflite
-├── round_0.weights.h5
-└── vocab.json
-```
-
----
-
-# Starting The Federated Learning Server
-
-Navigate to:
+### Start Backend
 
 ```bash
 cd server
-```
-
-Run:
-
-```bash
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-Server Endpoints:
-
-### Download Current Model
-
-```http
-GET /get_model
-```
-
-### Upload Client Weights
-
-```http
-POST /upload_weights
-```
-
-### Metrics
-
-```http
-GET /metrics
-```
-
-### Dashboard WebSocket
-
-```http
-/ws/dashboard
-```
-
 ---
 
-# Testing Server Health
+## Production Deployment
 
-Open:
+### Development Environment
 
-```text
-http://localhost:8000/metrics
-```
-
-Expected response:
-
-```json
-{
-  "round": 0,
-  "pending_uploads": 0
-}
-```
-
----
-
-# Federated Learning Workflow
-
-1. Client downloads latest model
-2. Client trains locally
-3. Client uploads weight updates
-4. Server waits for uploads
-5. FedAvg aggregation runs
-6. New global model generated
-7. Updated model distributed
-
----
-
-# Production Deployment
-
-## Training Environment
-
-Lightning.ai
-
-```text
-/teamspace/studios/this_studio/
-```
+Lightning AI
 
 Used for:
 
-* Training
+* Model training
 * Experimentation
-* Model generation
+* Development
 
----
+### Production Environment
 
-## Production Environment
-
-Azure VM
+Azure Virtual Machine
 
 Used for:
 
-* FastAPI server
-* FedAvg aggregation
+* FastAPI hosting
 * Dashboard hosting
 * Model distribution
+* Monitoring
 
 ---
 
-# Azure Commands
+## Monitoring
 
-## SSH Into VM
-
-```bash
-ssh -i ~/.ssh/spam-fl-key.pem azureuser@YOUR_VM_IP
-```
-
-## Check Running Services
-
-```bash
-tmux ls
-```
-
-## Start FastAPI Server
-
-```bash
-tmux new -s server
-
-cd ~/server
-
-python3 -m uvicorn main:app \
---host 0.0.0.0 \
---port 8000
-```
-
-Detach:
-
-```text
-Ctrl+B
-D
-```
-
----
-
-# Dashboard
-
-## Start Dashboard
-
-```bash
-streamlit run dashboard.py \
---server.headless true \
---server.port 8501
-```
-
-## Open Dashboard
-
-```text
-http://YOUR_VM_IP:8501
-```
-
----
-
-# Monitoring
-
-Check current round:
+Current Round:
 
 ```bash
 cat models/current_round.json
 ```
 
-Check accuracy:
+Accuracy:
 
 ```bash
 cat models/accuracy.json
 ```
 
-List generated models:
+Generated Models:
 
 ```bash
-ls -la models/
+ls models/
 ```
 
 ---
 
-# Future Improvements
+## Future Improvements
 
 * Differential Privacy
 * Secure Aggregation
-* Multi-client simulations
-* Transformer-based architecture
-* Real-device benchmarking
-* Docker deployment
-* Kubernetes orchestration
+* Federated Averaging with True Weight Aggregation
+* Multi-Client Simulation
+* Transformer-Based Models
+* Docker Deployment
+* Kubernetes Deployment
 
 ---
 
-# Author
+## Author
 
 Ankit Koli
 
-Federated Learning • Android • FastAPI • TensorFlow Lite • Privacy-Preserving AI
+Federated Learning • Android Development • FastAPI • TensorFlow Lite • Machine Learning
