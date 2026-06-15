@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+
+# Lightning / IDE
+.idea/
+.vscode/
+.lightning_studio/
+
+# Shell history & local configs
+.zsh_history
+.zcompdump
+
+# Training artifacts
+checkpoints/
+
+# Test artifacts
+models/X_test.npy
+models/y_test.npy
+models/head_weights_round_0.npy
+models/round_1.weights.h5.npy
+
+# OS
+.DS_Store
+
+.cursor-server/
+.vscode-server/
+.windsurf-server/
+.keras/
