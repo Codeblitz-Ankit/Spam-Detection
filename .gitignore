@@ -33,3 +33,9 @@ models/round_1.weights.h5.npy
 .windsurf-server
 .viminfo
 .lesshst
+
+.cursor-server
+.vscode-server
+.windsurf-server
+.viminfo
+.lesshst
